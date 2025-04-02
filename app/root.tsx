@@ -10,6 +10,7 @@ import {
 import type { Route } from "./+types/root";
 import "./app.css";
 import Grid from "@mui/material/Grid";
+import { Container } from "@mui/material";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -35,16 +36,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
 
-        <Grid
-          container
-          spacing={0}
-          direction="column"
-          alignItems="center"
-          justifyContent="center"
-          sx={{ minHeight: '100vh' }}
-        >
+        <Container maxWidth={"md"}>
           {children}
-        </Grid>
+        </Container>
         <ScrollRestoration />
         <Scripts />
       </body>

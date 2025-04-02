@@ -1,4 +1,4 @@
-import { Box, Button, Modal, TextField, Typography, Grid } from "@mui/material";
+import { Box, Button, Modal, TextField, Typography, Grid, Alert } from "@mui/material";
 import { useMemo, useState } from "react";
 import type { Route } from "./+types/home";
 import { redirect, useNavigate } from "react-router";
@@ -16,9 +16,9 @@ const modalStyle = {
   p: 4,
 };
 
-export function meta({}: Route.MetaArgs) {
+export function meta({ }: Route.MetaArgs) {
   return [
-    { title: "WT App" },,
+    { title: "WT App" }, ,
   ];
 }
 
@@ -28,6 +28,7 @@ export default function Home() {
   let navigate = useNavigate();
   const [videoUrl, setVideoUrl] = useState<string>("");
   const [roomId, setRoomId] = useState<string>("");
+  const [alertText, setAlertText] = useState<string>("");
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -37,25 +38,33 @@ export default function Home() {
   }
 
   const handleFind = () => {
-    return navigate(`/room/${roomId}`)
+    roomService.getRoom(roomId)
+      .then(r => {
+        return navigate(`/room/${roomId}`)
+      })
+      .catch(err => {
+        setAlertText("The room is not found");
+      })
   }
 
   return (
     <>
-    <Box width={600}>
-      <Button variant="contained" onClick={handleOpen} fullWidth>Create a new room</Button>
-      
-      <Grid mt={8} container spacing={1}>
-        <Grid size={8}>
-        <TextField size="small" label="Or enter an existing room ID" value={roomId} onChange={(e) => setRoomId(e.target.value)} fullWidth id="outlined-basic" variant="outlined" />
-      </Grid>
+      <Box width={"100%"}>
+        <Button variant="contained" onClick={handleOpen} fullWidth>Create a new room</Button>
 
-        <Grid size={4}>
-        <Button variant="contained" onClick={handleFind} fullWidth>Find</Button>
-      </Grid>
-      </Grid>
-    </Box>
+        <Grid mb={2} mt={8} container spacing={1}>
+          <Grid size={8}>
+            <TextField size="small" label="Or enter an existing room ID" value={roomId} onChange={(e) => setRoomId(e.target.value)} fullWidth id="outlined-basic" variant="outlined" />
+          </Grid>
 
+          <Grid size={4}>
+            <Button variant="contained" onClick={handleFind} fullWidth>Find</Button>
+          </Grid>
+        </Grid>
+        {alertText && <Alert severity="error" onClose={() => setAlertText("")}>
+          {alertText}
+        </Alert>}
+      </Box>
       <Modal
         open={open}
         onClose={handleClose}
@@ -74,7 +83,6 @@ export default function Home() {
           </Box>
           <Button variant="contained" onClick={handleCreate}>Create</Button>
         </Box>
-      </Modal>
-    </>
+      </Modal></>
   );
 }
