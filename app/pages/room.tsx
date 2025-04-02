@@ -1,7 +1,7 @@
-'use client';
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactPlayer from "react-player";
-import { OnProgressProps } from "react-player/base";
+import type { OnProgressProps } from "react-player/base";
+import { useParams } from "react-router";
 
 enum Actions {
   'Pause',
@@ -21,7 +21,9 @@ interface RoomResponse {
   VideoUrl: string
 }
 
-export default function Sub() {
+export default function Room() {
+  const params = useParams();
+
   const [hasWindow, setHasWindow] = useState(false);
   const playerRef = useRef<ReactPlayer>(null);
   const [playing, setPlaying] = useState(false);
@@ -37,7 +39,8 @@ export default function Sub() {
       setHasWindow(true);
     }
 
-    fetch("http://localhost:4000/room/baa23dd1-f37a-49ce-9c1b-a6ca2a2da8dd/get").then(async r => {
+    let roomId = params.roomId;
+    fetch(`http://localhost:4000/room/${roomId}/get`).then(async r => {
       let response = await r.json() as RoomResponse;
       setVideoUrl(response.VideoUrl);
     });
@@ -80,7 +83,7 @@ export default function Sub() {
         let seconds = parseInt(message.ActionInfo);
         const secondsDiff = Math.abs(seconds - playedSeconds);
         console.log('playedSeconds: ' + playedSeconds + ', seconds diff: ' + secondsDiff)
-        if(secondsDiff > 0.5) {
+        if(secondsDiff > 1) {
           setPlayedSeconds(seconds);
           playerRef.current?.seekTo(seconds);
         }

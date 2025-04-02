@@ -1,8 +1,7 @@
-'use client'
-import { Box, Button, Modal, TextField, Typography } from "@mui/material";
-import { redirect } from "next/dist/client/components/redirect";
-import Image from "next/image";
+import { Box, Button, Modal, TextField, Typography, Grid } from "@mui/material";
 import { useState } from "react";
+import type { Route } from "./+types/home";
+import { redirect, useNavigate } from "react-router";
 
 const modalStyle = {
   position: 'absolute',
@@ -16,9 +15,17 @@ const modalStyle = {
   p: 4,
 };
 
+export function meta({}: Route.MetaArgs) {
+  return [
+    { title: "WT App" },,
+  ];
+}
+
 export default function Home() {
   const [open, setOpen] = useState(false);
+  let navigate = useNavigate();
   const [videoUrl, setVideoUrl] = useState<string>("");
+  const [roomId, setRoomId] = useState<string>("");
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -32,13 +39,30 @@ export default function Home() {
       body: JSON.stringify(body),
       method: 'POST'
     }).then(() => {
-      redirect("/subfolder")
+    //   redirect("/subfolder")
     });
+  }
+
+  const handleFind = () => {
+    return navigate(`/room/${roomId}`)
   }
 
   return (
     <>
-      <Button variant="contained" onClick={handleOpen}>Create a new room</Button>
+    <Box width={600}>
+      <Button variant="contained" onClick={handleOpen} fullWidth>Create a new room</Button>
+      
+      <Grid mt={8} container spacing={1}>
+        <Grid size={8}>
+        <TextField size="small" label="Or enter an existing room ID" value={roomId} onChange={(e) => setRoomId(e.target.value)} fullWidth id="outlined-basic" variant="outlined" />
+      </Grid>
+
+        <Grid size={4}>
+        <Button variant="contained" onClick={handleFind} fullWidth>Find</Button>
+      </Grid>
+      </Grid>
+    </Box>
+
       <Modal
         open={open}
         onClose={handleClose}
