@@ -45,11 +45,13 @@ export default function Room() {
       })
     }
 
-    ws.current = new WebSocket("ws://localhost:4000/room/12345/subscribe");
+    if(ws.current == null) {
+      ws.current = new WebSocket("ws://localhost:4000/room/12345/subscribe");
+      ws.current.onopen = function (event) {
+        console.log("Connected to WebSocket server");
+      };
+    }
 
-    ws.current.onopen = function (event) {
-      console.log("Connected to WebSocket server");
-    };
   }, []);
 
   useEffect(() => {
