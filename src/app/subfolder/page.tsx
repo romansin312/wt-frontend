@@ -16,11 +16,17 @@ interface WsMessage {
   SenderUserId: number
 }
 
+interface RoomResponse {
+  Id: string;
+  VideoUrl: string
+}
+
 export default function Sub() {
   const [hasWindow, setHasWindow] = useState(false);
   const playerRef = useRef<ReactPlayer>(null);
   const [playing, setPlaying] = useState(false);
   const [playedSeconds, setPlayedSeconds] = useState(0);
+  const [videoUrl, setVideoUrl] = useState("")
   const ws = useRef<WebSocket>(null);
   const [lastSentMessageTimestamp, setLastSentMessageTimestamp] = useState(0);
   const [lastReceivedMessageTimestamp, setLastReceivedMessageTimestamp] = useState(0);
@@ -30,6 +36,11 @@ export default function Sub() {
     if (typeof window !== "undefined") {
       setHasWindow(true);
     }
+
+    fetch("http://localhost:4000/room/baa23dd1-f37a-49ce-9c1b-a6ca2a2da8dd/get").then(async r => {
+      let response = await r.json() as RoomResponse;
+      setVideoUrl(response.VideoUrl);
+    });
 
     ws.current = new WebSocket("ws://localhost:4000/room/12345/subscribe");
 
@@ -113,7 +124,8 @@ export default function Sub() {
     <div>
       {hasWindow &&
         <ReactPlayer
-          url={'https://youtu.be/LXb3EKWsInQ?si=ZC8mG-PE_0ME95CN'}
+          // url={'https://youtu.be/LXb3EKWsInQ?si=ZC8mG-PE_0ME95CN'}
+          url={videoUrl}
           controls={true}
           onSeek={sec => console.log("SEC: " + sec)}
           onDuration={dur => console.log("DUR: " + dur)}
