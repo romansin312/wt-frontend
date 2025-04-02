@@ -1,7 +1,8 @@
 import { Box, Button, Modal, TextField, Typography, Grid } from "@mui/material";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { Route } from "./+types/home";
 import { redirect, useNavigate } from "react-router";
+import { RoomService } from "~/services/rooms-service";
 
 const modalStyle = {
   position: 'absolute',
@@ -22,6 +23,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
+  const roomService = useMemo(() => new RoomService(), []);
   const [open, setOpen] = useState(false);
   let navigate = useNavigate();
   const [videoUrl, setVideoUrl] = useState<string>("");
@@ -31,16 +33,7 @@ export default function Home() {
   const handleClose = () => setOpen(false);
 
   const handleCreate = () => {
-    const body = {
-      videoUrl
-    }
-
-    fetch(`http://localhost:4000/rooms/create`, {
-      body: JSON.stringify(body),
-      method: 'POST'
-    }).then(() => {
-    //   redirect("/subfolder")
-    });
+    roomService.createRoom(videoUrl).then((newId) => navigate(`/room/${newId}`));
   }
 
   const handleFind = () => {

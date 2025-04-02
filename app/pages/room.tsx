@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import ReactPlayer from "react-player";
 import type { OnProgressProps } from "react-player/base";
 import { useParams } from "react-router";
+import { RoomService } from "~/services/rooms-service";
 
 enum Actions {
   'Pause',
@@ -16,12 +17,10 @@ interface WsMessage {
   SenderUserId: number
 }
 
-interface RoomResponse {
-  Id: string;
-  VideoUrl: string
-}
 
 export default function Room() {
+  const roomService = useMemo(() => new RoomService(), []);
+
   const params = useParams();
 
   const [hasWindow, setHasWindow] = useState(false);
@@ -33,17 +32,18 @@ export default function Room() {
   const [lastSentMessageTimestamp, setLastSentMessageTimestamp] = useState(0);
   const [lastReceivedMessageTimestamp, setLastReceivedMessageTimestamp] = useState(0);
 
-  const userId = useMemo(() =>  Math.floor(Math.random() * 1000), []);
+  const userId = useMemo(() => Math.floor(Math.random() * 1000), []);
   useEffect(() => {
     if (typeof window !== "undefined") {
       setHasWindow(true);
     }
 
     let roomId = params.roomId;
-    fetch(`http://localhost:4000/room/${roomId}/get`).then(async r => {
-      let response = await r.json() as RoomResponse;
-      setVideoUrl(response.VideoUrl);
-    });
+    if (roomId) {
+      roomService.getRoom(roomId).then(room => {
+        setVideoUrl(room.VideoUrl);
+      })
+    }
 
     ws.current = new WebSocket("ws://localhost:4000/room/12345/subscribe");
 
@@ -53,23 +53,23 @@ export default function Room() {
   }, []);
 
   useEffect(() => {
-    if(ws.current == null) 
+    if (ws.current == null)
       return;
 
     ws.current.onmessage = function (event) {
       let message = JSON.parse(event.data) as WsMessage;
       console.log("Received: " + event.data);
       console.log(message.SenderUserId, userId);
-      if(message.SenderUserId == userId) {
+      if (message.SenderUserId == userId) {
         console.log("that is the current user, skip");
         return;
       }
 
-      if(lastSentMessageTimestamp > message.Timestamp) {
+      if (lastSentMessageTimestamp > message.Timestamp) {
         return;
       }
 
-      if(lastReceivedMessageTimestamp > message.Timestamp) {
+      if (lastReceivedMessageTimestamp > message.Timestamp) {
         return;
       }
 
@@ -78,12 +78,12 @@ export default function Room() {
         setPlaying(false);
       } else if (message.ActionType == Actions.Play) {
         setPlaying(true)
-      } 
+      }
       else if (message.ActionType == Actions.Progress) {
         let seconds = parseInt(message.ActionInfo);
         const secondsDiff = Math.abs(seconds - playedSeconds);
         console.log('playedSeconds: ' + playedSeconds + ', seconds diff: ' + secondsDiff)
-        if(secondsDiff > 1) {
+        if (secondsDiff > 1) {
           setPlayedSeconds(seconds);
           playerRef.current?.seekTo(seconds);
         }
@@ -127,7 +127,6 @@ export default function Room() {
     <div>
       {hasWindow &&
         <ReactPlayer
-          // url={'https://youtu.be/LXb3EKWsInQ?si=ZC8mG-PE_0ME95CN'}
           url={videoUrl}
           controls={true}
           onSeek={sec => console.log("SEC: " + sec)}
