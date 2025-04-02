@@ -77,7 +77,7 @@ export default function Room() {
       if (message.ActionType == Actions.Pause) {
         setPlaying(false);
       } else if (message.ActionType == Actions.Play) {
-        setPlaying(true)
+        setPlaying(true);
       }
       else if (message.ActionType == Actions.Progress) {
         let seconds = parseInt(message.ActionInfo);
@@ -129,14 +129,11 @@ export default function Room() {
         <ReactPlayer
           url={videoUrl}
           controls={true}
-          onSeek={sec => console.log("SEC: " + sec)}
-          onDuration={dur => console.log("DUR: " + dur)}
           onPause={pauseHandler}
           onProgress={onProgressHandler}
           onPlay={playHandler}
           ref={playerRef}
           playing={playing}
-
         />}
     </div>
   );

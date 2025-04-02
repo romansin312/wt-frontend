@@ -1,7 +1,7 @@
 import { Box, Button, Modal, TextField, Typography, Grid, Alert } from "@mui/material";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { Route } from "./+types/home";
-import { redirect, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { RoomService } from "~/services/rooms-service";
 
 const modalStyle = {
@@ -24,14 +24,14 @@ export function meta({ }: Route.MetaArgs) {
 
 export default function Home() {
   const roomService = useMemo(() => new RoomService(), []);
-  const [open, setOpen] = useState(false);
+  const [isModalOpened, setIsModalOpened] = useState(false);
   let navigate = useNavigate();
   const [videoUrl, setVideoUrl] = useState<string>("");
   const [roomId, setRoomId] = useState<string>("");
   const [alertText, setAlertText] = useState<string>("");
 
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  const handleOpen = () => setIsModalOpened(true);
+  const handleClose = () => setIsModalOpened(false);
 
   const handleCreate = () => {
     roomService.createRoom(videoUrl).then((newId) => navigate(`/room/${newId}`));
@@ -47,6 +47,30 @@ export default function Home() {
       })
   }
 
+  const renderModal = useCallback(() => <Modal
+    open={isModalOpened}
+    onClose={handleClose}
+    aria-labelledby="modal-modal-title"
+    aria-describedby="modal-modal-description"
+  >
+    <Box sx={modalStyle}>
+      <Box sx={{ pb: 2 }}>
+        <Typography id="modal-modal-title" variant="h6" component="h2">
+          Create a new room
+        </Typography>
+        <Typography id="modal-modal-description" sx={{ mt: 2 }}>
+          Please enter a video URL for your room
+        </Typography>
+        <TextField value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} fullWidth id="outlined-basic" variant="outlined" />
+      </Box>
+      <Button variant="contained" onClick={handleCreate}>Create</Button>
+    </Box>
+  </Modal>, [isModalOpened, handleClose]);
+
+  const renderAlert = useCallback(() => <Alert severity="error" onClose={() => setAlertText("")}>
+    {alertText}
+  </Alert>, [alertText]);
+
   return (
     <>
       <Box width={"100%"}>
@@ -61,28 +85,9 @@ export default function Home() {
             <Button variant="contained" onClick={handleFind} fullWidth>Find</Button>
           </Grid>
         </Grid>
-        {alertText && <Alert severity="error" onClose={() => setAlertText("")}>
-          {alertText}
-        </Alert>}
+        {alertText && renderAlert()}
       </Box>
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
-        <Box sx={modalStyle}>
-          <Box sx={{ pb: 2 }}>
-            <Typography id="modal-modal-title" variant="h6" component="h2">
-              Create a new room
-            </Typography>
-            <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-              Please enter a video URL for your room
-            </Typography>
-            <TextField value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} fullWidth id="outlined-basic" variant="outlined" />
-          </Box>
-          <Button variant="contained" onClick={handleCreate}>Create</Button>
-        </Box>
-      </Modal></>
+      {renderModal()}
+    </>
   );
 }
