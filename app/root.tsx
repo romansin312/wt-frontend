@@ -9,7 +9,6 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import Grid from "@mui/material/Grid";
 import { Container } from "@mui/material";
 
 export const links: Route.LinksFunction = () => [

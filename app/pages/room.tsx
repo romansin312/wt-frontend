@@ -28,6 +28,7 @@ export default function Room() {
   const [playing, setPlaying] = useState(false);
   const [playedSeconds, setPlayedSeconds] = useState(0);
   const [videoUrl, setVideoUrl] = useState("")
+  const [roomId, setRoomId] = useState("")
   const ws = useRef<WebSocket>(null);
   const [lastSentMessageTimestamp, setLastSentMessageTimestamp] = useState(0);
   const [lastReceivedMessageTimestamp, setLastReceivedMessageTimestamp] = useState(0);
@@ -42,11 +43,12 @@ export default function Room() {
     if (roomId) {
       roomService.getRoom(roomId).then(room => {
         setVideoUrl(room.VideoUrl);
-      })
+      });
+      setRoomId(roomId);
     }
 
     if(ws.current == null) {
-      ws.current = new WebSocket("ws://localhost:4000/room/12345/subscribe");
+      ws.current = new WebSocket(`ws://localhost:4000/room/${roomId}/subscribe`);
       ws.current.onopen = function (event) {
         console.log("Connected to WebSocket server");
       };
@@ -101,7 +103,7 @@ export default function Room() {
       Timestamp: timestamp,
       SenderUserId: userId
     };
-    fetch(`http://localhost:4000/room/12345/action`, {
+    fetch(`http://localhost:4000/room/${roomId}/action`, {
       body: JSON.stringify(body),
       method: 'POST'
     }).then(() => {
