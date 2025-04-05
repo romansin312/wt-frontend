@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactPlayer from "react-player";
 import type { OnProgressProps } from "react-player/base";
 import { useParams } from "react-router";
@@ -14,7 +14,8 @@ interface WsMessage {
   ActionType: Actions,
   ActionInfo: string,
   Timestamp: number,
-  SenderUserId: number
+  SenderUserId: number,
+  RoomId: string
 }
 
 
@@ -95,21 +96,22 @@ export default function Room() {
     };
   }, [ws, playedSeconds, userId])
 
-  const sendAction = (actionType: Actions, actionInfo: string = "") => {
+  const sendAction = useCallback((actionType: Actions, actionInfo: string = "") => {
     let timestamp = Date.now();
     let body: WsMessage = {
       ActionType: actionType,
       ActionInfo: actionInfo,
       Timestamp: timestamp,
-      SenderUserId: userId
+      SenderUserId: userId,
+      RoomId: roomId
     };
-    fetch(`http://localhost:4000/room/${roomId}/action`, {
+    fetch(`http://localhost:4000/rooms/action`, {
       body: JSON.stringify(body),
       method: 'POST'
     }).then(() => {
       setLastSentMessageTimestamp(timestamp);
     });
-  }
+  }, [roomId, userId]);
 
   function onProgressHandler(progressProps: OnProgressProps): void {
     console.log(progressProps);
