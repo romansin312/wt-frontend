@@ -1,4 +1,4 @@
-import { Snackbar } from "@mui/material";
+import { Alert, type AlertColor, Snackbar } from "@mui/material";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactPlayer from "react-player";
 import type { OnProgressProps } from "react-player/base";
@@ -9,6 +9,7 @@ enum Actions {
   'Pause',
   'Play',
   'Progress',
+  'UserConnected',
   'UserDisconnected'
 }
 
@@ -28,6 +29,7 @@ export default function Room() {
 
   const [hasWindow, setHasWindow] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<AlertColor>("success")
   const playerRef = useRef<ReactPlayer>(null);
   const [playing, setPlaying] = useState(false);
   const [playedSeconds, setPlayedSeconds] = useState(0);
@@ -106,7 +108,13 @@ export default function Room() {
           }
           break;
           
+        case Actions.UserConnected:
+          setSnackbarSeverity("success");
+          setSnackbarMessage(`The user ${message.SenderUserId} has been connected`)
+          break;
+
         case Actions.UserDisconnected:
+          setSnackbarSeverity("warning");
           setSnackbarMessage(`The user ${message.SenderUserId} has been disconnected`)
           break;
       }
@@ -163,8 +171,16 @@ export default function Room() {
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
         open={!!snackbarMessage}
         onClose={() => setSnackbarMessage("")}
-        message={snackbarMessage}
-      />
+      >
+        <Alert
+          onClose={() => setSnackbarMessage("")}
+          severity={snackbarSeverity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </>
   );
 }
