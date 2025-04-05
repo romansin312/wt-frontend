@@ -62,6 +62,10 @@ export default function Room() {
       return;
 
     ws.current.onmessage = function (event) {
+      if(event.data == "Ping") {
+        return;
+      }
+      
       let message = JSON.parse(event.data) as WsMessage;
       console.log("Received: " + event.data);
       console.log(message.SenderUserId, userId);
