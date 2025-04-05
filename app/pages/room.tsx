@@ -1,3 +1,4 @@
+import { Snackbar } from "@mui/material";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactPlayer from "react-player";
 import type { OnProgressProps } from "react-player/base";
@@ -7,7 +8,8 @@ import { RoomService } from "~/services/rooms-service";
 enum Actions {
   'Pause',
   'Play',
-  'Progress'
+  'Progress',
+  'UserDisconnected'
 }
 
 interface WsMessage {
@@ -25,6 +27,7 @@ export default function Room() {
   const params = useParams();
 
   const [hasWindow, setHasWindow] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
   const playerRef = useRef<ReactPlayer>(null);
   const [playing, setPlaying] = useState(false);
   const [playedSeconds, setPlayedSeconds] = useState(0);
@@ -49,13 +52,13 @@ export default function Room() {
     }
 
     if(ws.current == null) {
-      ws.current = new WebSocket(`ws://localhost:4000/room/${roomId}/subscribe`);
+      ws.current = new WebSocket(`ws://localhost:4000/room/${roomId}/subscribe?userId=${userId}`);
       ws.current.onopen = function (event) {
         console.log("Connected to WebSocket server");
       };
     }
 
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     if (ws.current == null)
@@ -65,7 +68,7 @@ export default function Room() {
       if(event.data == "Ping") {
         return;
       }
-      
+
       let message = JSON.parse(event.data) as WsMessage;
       console.log("Received: " + event.data);
       console.log(message.SenderUserId, userId);
@@ -83,19 +86,29 @@ export default function Room() {
       }
 
       setLastReceivedMessageTimestamp(message.Timestamp);
-      if (message.ActionType == Actions.Pause) {
-        setPlaying(false);
-      } else if (message.ActionType == Actions.Play) {
-        setPlaying(true);
-      }
-      else if (message.ActionType == Actions.Progress) {
-        let seconds = parseInt(message.ActionInfo);
-        const secondsDiff = Math.abs(seconds - playedSeconds);
-        console.log('playedSeconds: ' + playedSeconds + ', seconds diff: ' + secondsDiff)
-        if (secondsDiff > 1) {
-          setPlayedSeconds(seconds);
-          playerRef.current?.seekTo(seconds);
-        }
+
+      switch (message.ActionType) {
+        case Actions.Pause:
+          setPlaying(false);
+          break;
+
+        case Actions.Play:
+          setPlaying(true);
+          break;
+
+        case Actions.Progress:
+          let seconds = parseInt(message.ActionInfo);
+          const secondsDiff = Math.abs(seconds - playedSeconds);
+          console.log('playedSeconds: ' + playedSeconds + ', seconds diff: ' + secondsDiff)
+          if (secondsDiff > 1) {
+            setPlayedSeconds(seconds);
+            playerRef.current?.seekTo(seconds);
+          }
+          break;
+          
+        case Actions.UserDisconnected:
+          setSnackbarMessage(`The user ${message.SenderUserId} has been disconnected`)
+          break;
       }
     };
   }, [ws, playedSeconds, userId])
@@ -134,7 +147,7 @@ export default function Room() {
   };
 
   return (
-    <div>
+    <>
       {hasWindow &&
         <ReactPlayer
           url={videoUrl}
@@ -145,6 +158,13 @@ export default function Room() {
           ref={playerRef}
           playing={playing}
         />}
-    </div>
+
+      <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        open={!!snackbarMessage}
+        onClose={() => setSnackbarMessage("")}
+        message={snackbarMessage}
+      />
+    </>
   );
 }
