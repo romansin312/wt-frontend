@@ -130,13 +130,9 @@ export default function Room() {
       SenderUserId: userId,
       RoomId: roomId
     };
-    fetch(`http://localhost:4000/rooms/action`, {
-      body: JSON.stringify(body),
-      method: 'POST'
-    }).then(() => {
-      setLastSentMessageTimestamp(timestamp);
-    });
-  }, [roomId, userId]);
+
+    ws.current?.send(JSON.stringify(body))
+  }, [roomId, userId, ws.current]);
 
   function onProgressHandler(progressProps: OnProgressProps): void {
     console.log(progressProps);
