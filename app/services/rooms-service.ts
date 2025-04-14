@@ -1,5 +1,7 @@
+import { BASE_URL } from "config";
+
 export class RoomService {
-    private baseUrl = "http://localhost:4000"; //move to config
+    private baseUrl = `http://${BASE_URL}`;
 
     async getRoom(id: string): Promise<RoomModel> {
         return (await fetch(`${this.baseUrl}/room/${id}/get`)).json();

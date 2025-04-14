@@ -1,4 +1,5 @@
 import { Alert, type AlertColor, Snackbar } from "@mui/material";
+import { BASE_URL } from "config";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactPlayer from "react-player";
 import type { OnProgressProps } from "react-player/base";
@@ -54,7 +55,7 @@ export default function Room() {
     }
 
     if(ws.current == null) {
-      ws.current = new WebSocket(`ws://localhost:4000/room/${roomId}/subscribe?userId=${userId}`);
+      ws.current = new WebSocket(`ws://${BASE_URL}/room/${roomId}/subscribe?userId=${userId}`);
       ws.current.onopen = function (event) {
         console.log("Connected to WebSocket server");
       };
